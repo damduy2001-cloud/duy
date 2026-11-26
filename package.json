@@ -1,0 +1,8 @@
+{
+  "name": "ydtt-apivn-relay",
+  "version": "1.5.0",
+  "private": true,
+  "description": "Same-origin APIVN relay for YDTT Factory R1.5",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node server.js", "test": "node --test" }
+}

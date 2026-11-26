@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ydtt-apivn-relay
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: APIVN_API_KEY
+        sync: false
+      - key: RELAY_ACCESS_TOKEN
+        sync: false
+      - key: UPSTREAM_TIMEOUT_MS
+        value: 240000
