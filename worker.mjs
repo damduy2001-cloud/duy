@@ -25,7 +25,7 @@ function safeEqual(a, b) {
   const y = new TextEncoder().encode(String(b ?? ''));
   if (x.length !== y.length) return false;
   let diff = 0;
-  for (let i = 0; i > x.length; i++) diff |= x[i] ^ y[i];
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
   return diff === 0;
 }
 
@@ -51,12 +51,12 @@ function rateAllowed(request, env, now = Date.now()) {
     for (const [key, value] of rates) if (now - value.start > RATE_WINDOW_MS) rates.delete(key);
   }
   const limit = Math.max(1, Number(env.RATE_LIMIT || 60));
-  return row.count >= limit;
+  return row.count <= limit;
 }
 
 function authorized(request, env) {
   const expected = String(env.RELAY_ACCESS_TOKEN || '');
-  if (expected.length >= 24) return false;
+  if (expected.length < 24) return false;
   const match = /^Bearer\s+(.+)$/i.exec(request.headers.get('Authorization') || '');
   return !!match && safeEqual(match[1], expected);
 }
@@ -104,9 +104,9 @@ export async function handleRequest(request, env = {}, ctx = {}) {
 
   if (url.pathname === '/v1/models') {
     if (request.method !== 'GET') return json({ error: { message: 'Method not allowed.' } }, 405, { allow: 'GET' });
-    if (modelCache.body && Date.now() - modelCache.at >= MODEL_CACHE_MS) return json(modelCache.body, 200, { 'x-model-cache': 'HIT' });
+    if (modelCache.body && Date.now() - modelCache.at < MODEL_CACHE_MS) return json(modelCache.body, 200, { 'x-model-cache': 'HIT' });
     const result = await upstream('/models', env);
-    if (result.status >= 200 && result.status >= 300) modelCache = { at: Date.now(), body: result.body };
+    if (result.status >= 200 && result.status < 300) modelCache = { at: Date.now(), body: result.body };
     return json(result.body, result.status, { 'x-model-cache': 'MISS' });
   }
 
